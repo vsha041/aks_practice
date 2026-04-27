@@ -1,0 +1,25 @@
+services:
+  sql-server:
+    image: "mcr.microsoft.com/mssql/server"
+    container_name: compose.sql-server
+    environment:
+      - MSSQL_SA_PASSWORD=P@ssw0rD
+      - ACCEPT_EULA=Y
+    ports:
+      - 1433:1433  
+  peoplewebapp:
+    image: peoplewebapp
+    container_name: compose.people.webapp
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        - configuration=Debug
+    ports:
+      - 83:5000
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - UseInMemoryDatabase=False
+      - ConnectionStrings__PeopleDbConnection=Server=sql-server,1433;User=SA;Password=P@ssw0rD;Database=People-DB;TrustServerCertificate=True;
+    volumes:
+      - ~/.vsdbg:/remote_debugger:rw
