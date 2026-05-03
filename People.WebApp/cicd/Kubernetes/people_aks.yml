@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: people-webapp-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: people-webapp
+  template:
+    metadata:
+      labels:
+        app: people-webapp
+    spec:
+      containers:
+      - name: people-webapp
+        image: people2.azurecr.io/people.webapp:v1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: people-webapp-service
+spec:
+  selector:
+    app: people-webapp
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 5000

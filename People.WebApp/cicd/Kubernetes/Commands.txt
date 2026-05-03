@@ -1,0 +1,32 @@
+// AKS
+// Once the container registry has the image
+kubectl apply -f .\people_aks.yml
+
+// LOCAL
+kubectl apply -f .\people_deployment.yml
+kubectl apply -f .\people_service.yml
+
+// DEBUGGING
+kubectl run test-client --rm -it --image=curlimages/curl -- sh
+kubectl port-forward svc/service-name 8080:5000
+
+// see all pods
+kubectl get pods --all-namespaces
+
+// see all services
+kubectl get svc --all-namespaces
+
+// see pod configration
+kubectl describe pod
+
+// see logs
+kubectl logs -l app=name_of_the_app
+
+// get service
+kubectl get svc service-name
+
+// see all nodes
+kubectl get nodes
+
+// set kubernetes context for commands
+ az aks get-credentials -g rg-aks-people -n aks-people

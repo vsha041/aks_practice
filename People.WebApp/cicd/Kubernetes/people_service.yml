@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: people-webapp-service
+spec:
+  selector:
+    app: people-webapp
+  type: LoadBalancer
+  ports:
+  - port: 5000
+    targetPort: 5000
