@@ -1,8 +1,19 @@
+using Azure.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
 using People.WebApp.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// kevault
+var kvName = builder.Configuration["KeyVaultName"];
+var mi = builder.Configuration["ManagedIdentityClientId"];
+var vaultUri = new Uri($"https://{kvName}.vault.azure.net/");
+var defaultAzureCredentialOptions = new DefaultAzureCredentialOptions
+{
+    ManagedIdentityClientId = mi
+};
+var defaultAzureCredential = new DefaultAzureCredential(defaultAzureCredentialOptions);
+builder.Configuration.AddAzureKeyVault(vaultUri, defaultAzureCredential);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -16,8 +27,10 @@ builder.Services.AddDbContext<PeopleDbContext>(options =>
     }
     else
     {
-        options.UseSqlServer(builder.Configuration.
-            GetConnectionString("PeopleDbConnection"));
+        var connectionStringSecretName = builder.Configuration.GetValue<string>("SecretName");
+        if (string.IsNullOrWhiteSpace(connectionStringSecretName)) throw new ArgumentNullException("Can't find name of the secret.");
+        var kvSecret = builder.Configuration.GetValue<string>(connectionStringSecretName);
+        options.UseSqlServer(kvSecret);
     }
 });
 
