@@ -33,11 +33,10 @@ jobs:
       - name: Login to Azure Container Registry
         run: az acr login -n $ACR_NAME
 
-      - name: Count existing tags and configure the image tag
+      - name: Configure image tag
         run: |
-          COUNT=$(az acr repository show-tags -n $ACR_NAME --repository $IMAGE_NAME -o tsv | wc -l)
-          IMAGE_TAG=v$(expr $COUNT + 1)
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          IMAGE_TAG="v${{ github.run_number }}"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_ENV"
 
       - name: Build and Push Docker image
         id: build-image
