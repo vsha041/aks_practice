@@ -9,10 +9,18 @@ env:
   IMAGE_NAME: people.webapp
   ACR_NAME: people2
   ACR_LOGIN_SERVER: people2.azurecr.io
+  RG_NAME: rg-aks-people
+  CLUSTER_NAME: aks-people
+  AKS_POOL_NODE_NAME: aks-people-agentpool
+
 
 jobs:
   build-and-push-docker-image:
     runs-on: ubuntu-latest
+
+    outputs: 
+      fq_image_name: ${{steps.build-image.outputs.FQ_IMAGE_NAME}}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,6 +43,7 @@ jobs:
         run: |  
           FQ_IMAGE_NAME=$ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG
           echo "FQ_IMAGE_NAME=$FQ_IMAGE_NAME" >> $GITHUB_ENV
+          echo "FQ_IMAGE_NAME=$FQ_IMAGE_NAME" >> $GITHUB_OUTPUT
           docker build -t $FQ_IMAGE_NAME -f ./People.WebApp/Dockerfile ./People.WebApp
           docker push $FQ_IMAGE_NAME
 
@@ -43,3 +52,31 @@ jobs:
           
       - name: Cleanup Docker images
         run: docker image rm $FQ_IMAGE_NAME
+
+  deploy-to-aks:
+    runs-on: ubuntu-latest
+    needs: build-and-push-docker-image
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{secrets.AZURE_CREDENTIALS}}
+          
+      - name: Configure Kubernetes Secret
+        run: az aks get-credentials -g $RG_NAME -n $CLUSTER_NAME
+
+      - name: Configure Kubernetes Manifest
+        env:
+          FQ_IMAGE_NAME: ${{ needs.build-and-push-docker-image.outputs.fq_image_name }}
+        run: |
+          MANAGED_CLIENT_ID=$(az identity list --query "[?contains(name, '$AKS_POOL_NODE_NAME')].clientId" -o tsv)
+          sed -i "s|<FQ_IMAGE_NAME>|$FQ_IMAGE_NAME|g" ./aks/deployment.yml
+          sed -i "s|<MANAGED_CLIENT_ID>|$MANAGED_CLIENT_ID|g" ./aks/deployment.yml
+          cat ./aks/deployment.yml
+
+      - name: Update Deployment
+        run: kubectl apply -f ./aks/deployment.yml
