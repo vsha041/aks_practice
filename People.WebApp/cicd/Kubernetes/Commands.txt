@@ -30,3 +30,18 @@ kubectl get nodes
 
 // set kubernetes context for commands
  az aks get-credentials -g rg-aks-people -n aks-people
+
+ // see history of rollouts
+ kubectl rollout history deployment/people-webapp-deployment
+
+ // revert to N - 1 version 
+ kubectl rollout undo deployment/people-webapp-deployment
+
+ // rever to version 3
+ kubectl rollout undo deployment/people-webapp-deployment --to-revision=3
+
+ // restart deployment from the beginning
+ kubectl rollout restart deployment/people-webapp-deployment
+
+ // scale number of PODS to 8 but try to use K8 Horizontal POD AutoScalar (HPA)
+ kubectl scale deployment/people-webapp-deployment --replicas=8
