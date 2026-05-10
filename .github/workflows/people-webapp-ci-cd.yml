@@ -35,7 +35,7 @@ jobs:
         run: |  
           FQ_IMAGE_NAME=$ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG
           echo "FQ_IMAGE_NAME=$FQ_IMAGE_NAME" >> $GITHUB_ENV
-          docker build -t $FQ_IMAGE_NAME .
+          docker build -t $FQ_IMAGE_NAME -f ./People.WebApp/Dockerfile ./People.WebApp
           docker push $FQ_IMAGE_NAME
 
       - name: Logout from Azure Container Registry
